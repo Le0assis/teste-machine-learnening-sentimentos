@@ -1,11 +1,11 @@
 
-#Transformar em função
-#Fazer com que salve apenas quando aperta botão e escreva a emoção
-
 
 import cv2
 import pandas as pd
 import numpy as np
+import joblib
+
+model = joblib.load("model.pkl")
 
 face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
@@ -28,9 +28,10 @@ while True:
     # frame, imagem da camera em matriz Numpy
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (5,5), 0)
     # Detectores clássicos trabalham melhor em escala de cinza
 
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+    faces = face_cascade.detectMultiScale(gray, 1.1, 8)
 
     for(x, y, w, h) in faces:
     # comprimento, altura, largura, e altura
@@ -42,10 +43,9 @@ while True:
         face = face.flatten()
         key = cv2.waitKey(1) & 0xFF
 
-        if key == ord('w'):
-            data.append(face)
-            labels.append("Lingua pra fora")
-
+        prediction = model.predict([face])
+        cv2.putText(frame, prediction[0], (x, y-10),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,255,0), 2)
     cv2.imshow('Face Detection', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
